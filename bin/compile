@@ -100,15 +100,6 @@ export npm_config_prefix="$VENDORED_MODULES"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
-
-############################################
-# install meteorite
-############################################
-echo "-----> Installing meteorite with npm"
-
-run_npm "install meteorite -g"
-echo "Meteorite installed" | indent
-
 METEOR_BUILD_DIR="$BUILD_DIR/.meteor/heroku_build"
 mkdir -p "$HOME"
 ############################################
@@ -122,6 +113,14 @@ echo "Installing meteor" | indent
 VENDORED_METEOR="$(mktmpdir meteor)"
 curl https://install.meteor.com | HOME="$VENDORED_METEOR" /bin/sh | indent
 echo "Meteor installed" | indent
+
+############################################
+# install meteorite
+############################################
+echo "-----> Installing meteorite with npm"
+
+run_npm "install meteorite -g"
+echo "Meteorite installed" | indent
 
 echo "Installing packages" | indent
 HOME="$BUILD_DIR" mrt install --force | indent
