@@ -10,6 +10,10 @@ set -e
 # clean up leaking environment
 unset GIT_DIR
 
+# config
+SCONS_VERSION="1.2.0"
+S3_BUCKET="heroku-buildpack-nodejs"
+
 # parse and derive params
 BUILD_DIR=$1
 CACHE_DIR=$2
@@ -102,6 +106,7 @@ export CPPPATH="$INCLUDE_PATH"
 
 METEOR_BUILD_DIR="$BUILD_DIR/.meteor/heroku_build"
 mkdir -p "$HOME"
+
 ############################################
 # install meteor + packages through mrt
 # bundle, and install into app/
@@ -133,6 +138,25 @@ tar -zxf "$CACHE_DIR"/bundle.tar.gz --strip-components 1 -C "$METEOR_BUILD_DIR"/
 rm "$CACHE_DIR"/bundle.tar.gz
 ############################################
 
+## phantomjs
+
+PHANTOMJSVERSION="1.9.0"
+S3_BUCKET="stomita-buildpack-phantomjs"
+
+# s3 packages
+FILE_NAME="buildpack-phantomjs-${PHANTOMJSVERSION}.tar.gz"
+BUILDPACK_PHANTOMJS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/${FILE_NAME}"
+
+mkdir -p $CACHE_DIR
+if ! [ -e $CACHE_DIR/$FILE_NAME ]; then
+  echo "-----> Fetching PhantomJS buildpack binaries"
+  curl $BUILDPACK_PHANTOMJS_PACKAGE -s -o $CACHE_DIR/$FILE_NAME
+fi
+
+echo "-----> Extracting PhantomJS binaries"
+mkdir -p $BUILD_DIR/vendor/phantomjs
+tar zxf $CACHE_DIR/$FILE_NAME -C $BUILD_DIR/vendor/phantomjs
+
 ############################################
 # Prepare ENV vars
 ############################################
@@ -145,7 +169,6 @@ cat > "$BUILD_DIR"/.profile.d/mongo.sh <<EOF
 EOF
 
 # vendor node into the slug
-PATH="$METEOR_BUILD_DIR/bin:$PATH"
 echo "-----> Vendoring node into slug"
 mkdir -p "$METEOR_BUILD_DIR/bin"
 cp "$VENDORED_NODE/bin/node" "$METEOR_BUILD_DIR/bin/node"
